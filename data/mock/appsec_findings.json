@@ -1,0 +1,45 @@
+{
+  "_SIMULATED": "Mock AppSec scanner findings (SAST, SCA and secrets) for a fictional payments-service. Not real data.",
+  "issues": [
+    {
+      "id": "APP-1001",
+      "type": "SCA",
+      "severity": "critical",
+      "title": "lodash <4.17.21 prototype pollution (CVE-2021-23337)",
+      "repo": "payments-service",
+      "file": "package-lock.json",
+      "reachable": true,
+      "fix": "Upgrade lodash to >=4.17.21"
+    },
+    {
+      "id": "APP-1002",
+      "type": "SAST",
+      "severity": "high",
+      "title": "SQL string concatenation in user lookup",
+      "repo": "payments-service",
+      "file": "src/db/users.js:88",
+      "reachable": true,
+      "fix": "Use parameterised query"
+    },
+    {
+      "id": "APP-1003",
+      "type": "SCA",
+      "severity": "medium",
+      "title": "axios <1.6.0 SSRF (CVE-2023-45857)",
+      "repo": "payments-service",
+      "file": "package-lock.json",
+      "reachable": false,
+      "fix": "Upgrade axios to >=1.6.0"
+    },
+    {
+      "id": "APP-1004",
+      "type": "secret",
+      "severity": "critical",
+      "title": "Hardcoded AWS access key in commit history",
+      "repo": "payments-service",
+      "file": "src/config/legacy.js:12",
+      "reachable": true,
+      "fix": "Rotate key, remove from history, use secrets manager"
+    }
+  ]
+}

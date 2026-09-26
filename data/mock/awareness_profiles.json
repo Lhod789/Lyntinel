@@ -1,0 +1,21 @@
+{
+  "_SIMULATED": "Mock security-awareness profiles for fictional users. Not real data.",
+  "users": [
+    {
+      "email": "j.okafor@example-corp.com",
+      "department": "Finance",
+      "awareness_risk_level": "elevated",
+      "failed_simulations_90d": 3,
+      "last_failed": "2026-06-19",
+      "training_completion": 0.55
+    },
+    {
+      "email": "a.silva@example-corp.com",
+      "department": "Engineering",
+      "awareness_risk_level": "low",
+      "failed_simulations_90d": 0,
+      "last_failed": null,
+      "training_completion": 0.98
+    }
+  ]
+}

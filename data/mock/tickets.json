@@ -1,0 +1,12 @@
+{
+  "_SIMULATED": "Mock security tickets, so the agent can answer 'is there already a linked ticket?' and avoid filing a duplicate. Not real data.",
+  "issues": [
+    {
+      "key": "SEC-318",
+      "summary": "Upgrade axios to >=1.6.0 (CVE-2023-45857)",
+      "status": "In Progress",
+      "sprint": "Sprint 24",
+      "links": { "cve": "CVE-2023-45857", "repo": "payments-service" }
+    }
+  ]
+}

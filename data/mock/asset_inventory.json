@@ -1,0 +1,32 @@
+{
+  "_SIMULATED": "Business context for each service/repo. In a real deployment this is joined from a CMDB, cloud tags, an APM/deployment tool, and the threat model. Here it is a labelled mock so the enrichment and scoring can answer 'is this internet-facing / deployed / regulated?' without a paid CMDB.",
+  "assets": {
+    "payments-service": {
+      "internet_facing": true,
+      "environments_deployed": ["prod", "staging"],
+      "data_classification": "PII+PCI",
+      "regulatory_scope": ["PCI-DSS", "UK-GDPR"],
+      "asset_criticality": "tier1",
+      "compensating_controls": ["WAF", "runtime-secrets-scanning"],
+      "owning_team": "Payments"
+    },
+    "internal-admin-tool": {
+      "internet_facing": false,
+      "environments_deployed": ["prod"],
+      "data_classification": "internal",
+      "regulatory_scope": [],
+      "asset_criticality": "tier2",
+      "compensating_controls": ["VPN-only"],
+      "owning_team": "Platform"
+    },
+    "marketing-site": {
+      "internet_facing": true,
+      "environments_deployed": ["prod"],
+      "data_classification": "public",
+      "regulatory_scope": [],
+      "asset_criticality": "tier3",
+      "compensating_controls": ["WAF", "CDN"],
+      "owning_team": "Marketing"
+    }
+  }
+}

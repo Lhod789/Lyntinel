@@ -1,0 +1,18 @@
+{
+  "_SIMULATED": "Mock risk register and accepted-risk list for a fictional payments-service. Not real data.",
+  "accepted_risks": [
+    {
+      "risk_id": "RR-2041",
+      "title": "axios SSRF (CVE-2023-45857) - low reachability",
+      "matches": { "cve": "CVE-2023-45857" },
+      "status": "accepted",
+      "accepted_by": "Head of Engineering",
+      "review_date": "2026-09-30",
+      "rationale": "Not reachable from an untrusted path; upgrade scheduled next sprint."
+    }
+  ],
+  "controls": [
+    { "control_id": "CTL-07", "name": "WAF on internet-facing services", "state": "operating" },
+    { "control_id": "CTL-12", "name": "Quarterly dependency patching", "state": "operating" }
+  ]
+}

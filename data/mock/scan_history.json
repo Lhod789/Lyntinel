@@ -1,0 +1,19 @@
+{
+  "_SIMULATED": "Models a rolling history of scan results the agent aggregates into a weekly trend summary (design doc section 6). In production this is derived from AppSec scanner's issue history + Ticketing remediation status. Dates are relative to the demo 'today' of 2026-07-02.",
+  "weeks": [
+    { "week_ending": "2026-06-25", "apps_scanned": 71, "new": 41, "remediated": 39, "open_at_week_end": 132 },
+    { "week_ending": "2026-07-02", "apps_scanned": 73, "new": 34, "remediated": 48, "open_at_week_end": 118 }
+  ],
+  "current_open_by_category": {
+    "Outdated libraries (SCA)": 44,
+    "Missing authentication / access control": 22,
+    "Secrets exposure": 17,
+    "Injection (SQL/command)": 14,
+    "Misconfiguration": 21
+  },
+  "backlog_by_team": [
+    { "team": "Payments", "open": 39, "p1": 3, "oldest_days": 21 },
+    { "team": "Platform", "open": 27, "p1": 1, "oldest_days": 44 },
+    { "team": "Marketing", "open": 9, "p1": 0, "oldest_days": 12 }
+  ]
+}

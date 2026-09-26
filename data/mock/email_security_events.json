@@ -1,0 +1,31 @@
+{
+  "_SIMULATED": "Mock email-security events for the correlation scenario. Not real customer data.",
+  "messages": [
+    {
+      "message_id": "msg-7f3a9c21",
+      "recipient": ["j.okafor@example-corp.com"],
+      "sender": "billing@invoice-secure-portal.com",
+      "subject": "Outstanding invoice #INV-20486 - action required",
+      "received_at": "2026-06-27T08:39:50Z",
+      "indicators": [
+        {
+          "type": "url",
+          "value": "http://192.0.2.55/inv/login",
+          "verdict": "phish",
+          "status": "active"
+        }
+      ],
+      "clicked_safe": false,
+      "clicked_blocked": false
+    }
+  ],
+  "url_clicks": [
+    {
+      "message_id": "click-1182",
+      "recipient": "j.okafor@example-corp.com",
+      "url": "http://192.0.2.55/inv/login",
+      "click_time": "2026-06-27T08:40:58Z",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    }
+  ]
+}

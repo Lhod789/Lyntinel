@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lyntinel — AI Security Agent (concept demo)</title>
+<style>
+  :root{
+    --bg:#0c1020; --panel:#141a2e; --panel2:#1b2338; --line:#26304d;
+    --txt:#e6ebf5; --muted:#8a97b4; --brand:#5b8cff; --brand2:#7a5bff;
+    --p1:#ff4d5e; --p2:#ff9f43; --p3:#ffd23f; --p4:#4bd4a2;
+    --sim:#8a97b4; --chip:#222c47; --crit:#ff4d5e; --warn:#ff9f43;
+    --shadow:0 8px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,#182247 0,var(--bg) 55%);
+    color:var(--txt);min-height:100vh;font-size:14px}
+  .bar{display:flex;align-items:center;gap:16px;padding:12px 22px;border-bottom:1px solid var(--line);
+    background:linear-gradient(90deg,#111730,#0d1226);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:.3px}
+  .logo .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    display:grid;place-items:center;font-size:15px;color:#fff;box-shadow:0 0 16px rgba(91,140,255,.5)}
+  .tagline{color:var(--muted);font-size:12px;border-left:1px solid var(--line);padding-left:16px}
+  .evpill{display:none;align-items:center;gap:7px;background:rgba(255,77,94,.14);border:1px solid rgba(255,77,94,.5);
+    color:#ffb3ba;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer}
+  .evpill.on{display:inline-flex;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,77,94,.5)}50%{box-shadow:0 0 0 6px rgba(255,77,94,0)}}
+  .conn{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:640px}
+  .src{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border:1px solid var(--line);
+    border-radius:20px;padding:3px 10px;font-size:11px;color:var(--muted)}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .dot.sim{background:var(--sim)}
+  /* tabs */
+  .tabs{display:flex;gap:4px;padding:10px 22px 0;border-bottom:1px solid var(--line);
+    background:linear-gradient(90deg,#0f1530,#0c1124);position:sticky;top:51px;z-index:4}
+  .tab{padding:11px 18px;border:1px solid transparent;border-bottom:0;border-radius:10px 10px 0 0;cursor:pointer;
+    color:var(--muted);font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:8px}
+  .tab:hover{color:var(--txt)}
+  .tab.active{background:var(--panel);border-color:var(--line);color:var(--txt)}
+  .tab .bdg{background:var(--p1);color:#0c1020;border-radius:10px;font-size:10px;font-weight:800;padding:1px 6px}
+  .view{display:none;padding:16px 22px;max-width:1500px;margin:0 auto}
+  .view.active{display:block}
+  .banner{padding:10px 0 0}
+  .banner .b2{background:rgba(122,91,255,.1);border:1px solid rgba(122,91,255,.35);border-radius:10px;
+    padding:9px 14px;font-size:12px;color:#c7bcff}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+  @media(max-width:1050px){.grid2{grid-template-columns:1fr}}
+  .kpis{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .kpi{flex:1;min-width:90px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .kpi b{font-size:22px;display:block}
+  .kpi span{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .phead{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .phead h2{margin:0;font-size:14px}
+  .phead small{color:var(--muted);font-size:11px}
+  .list{max-height:560px;overflow:auto}
+  .row{padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;display:grid;
+    grid-template-columns:auto 1fr auto;gap:12px;align-items:center;transition:background .12s}
+  .row:hover{background:var(--panel2)}
+  .row.sel{background:linear-gradient(90deg,rgba(91,140,255,.16),transparent);border-left:3px solid var(--brand)}
+  .pri{font-weight:800;font-size:13px;border-radius:8px;padding:6px 9px;min-width:38px;text-align:center;color:#0c1020}
+  .P1{background:var(--p1)}.P2{background:var(--p2)}.P3{background:var(--p3)}.P4{background:var(--p4)}
+  .rtitle{font-weight:600}
+  .rmeta{color:var(--muted);font-size:12px;margin-top:2px}
+  .newbadge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.5px;color:#0c1020;background:var(--p2);
+    border-radius:5px;padding:1px 5px;margin-left:8px}
+  .sev{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
+  .sev b{color:var(--txt)}
+  .ev{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;border-radius:5px;padding:2px 6px;margin-top:5px}
+  .CONFIRMED{background:rgba(75,212,162,.16);color:var(--p4)}
+  .INFERRED{background:rgba(122,91,255,.18);color:#b3a3ff}
+  .UNKNOWN{background:rgba(255,159,67,.16);color:var(--p2)}
+  .SIMULATED{background:rgba(138,151,180,.16);color:var(--muted)}
+  .detail{padding:16px}
+  .dtitle{font-size:15px;font-weight:700;margin:0 0 3px}
+  .dsub{color:var(--muted);font-size:12px;margin-bottom:14px}
+  .qa{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  .q{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .q .k{color:var(--muted);font-size:11px}
+  .q .v{font-weight:600;margin-top:2px}
+  .v .yes{color:var(--p1)}.v .no{color:var(--p4)}
+  .score{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px}
+  .score h4{margin:0 0 8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .adj{display:flex;align-items:center;gap:10px;font-size:12px;padding:3px 0}
+  .adj .d{font-weight:800;width:38px;text-align:right}
+  .adj .up{color:var(--p1)}.adj .dn{color:var(--p4)}
+  .adj .s{color:var(--muted);margin-left:auto;font-size:11px}
+  .total{border-top:1px dashed var(--line);margin-top:8px;padding-top:8px;font-weight:700}
+  .rem{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px}
+  .rem h4{margin:0 0 6px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .rem ul{margin:0;padding-left:18px}.rem li{margin:3px 0}
+  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:13px}
+  .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+  .btn.danger{background:linear-gradient(135deg,#ff4d5e,#ff7a45);color:#fff}
+  .btn.sm{padding:6px 11px;font-size:12px}
+  .flag{font-size:12px;color:var(--p2);background:rgba(255,159,67,.12);border:1px solid rgba(255,159,67,.3);
+    border-radius:8px;padding:8px 10px;margin-bottom:12px}
+  .flag.breach{color:#ffb3ba;background:rgba(255,77,94,.12);border-color:rgba(255,77,94,.4);cursor:pointer;
+    display:flex;align-items:center;justify-content:space-between;gap:10px}
+  /* chat */
+  .chat{display:flex;flex-direction:column;flex:1}
+  .msgs{padding:16px;overflow:auto;flex:1;max-height:400px;display:flex;flex-direction:column;gap:12px}
+  .m{max-width:88%;padding:11px 13px;border-radius:12px;line-height:1.5;font-size:13px;white-space:pre-wrap}
+  .m.user{align-self:flex-end;background:linear-gradient(135deg,#2a3a6b,#2b2f57);border:1px solid #35427a}
+  .m.bot{align-self:flex-start;background:var(--panel2);border:1px solid var(--line)}
+  .m .who{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+  .m .lbl{font-size:10px;font-weight:700;border-radius:5px;padding:1px 5px;margin-right:5px}
+  .suggest{display:flex;gap:8px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--line)}
+  .chip{background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:7px 12px;font-size:12px;cursor:pointer;color:var(--txt)}
+  .chip:hover{border-color:var(--brand);color:#fff}
+  .inputrow{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+  .inputrow input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--txt);font-size:13px}
+  /* threat modelling */
+  .srccards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+  @media(max-width:900px){.srccards{grid-template-columns:1fr}}
+  .srccard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+  .srccard .t{font-weight:700;display:flex;align-items:center;gap:8px}
+  .srccard .d{color:var(--muted);font-size:12px;margin-top:5px}
+  .bound{display:inline-block;background:rgba(91,140,255,.12);border:1px solid rgba(91,140,255,.35);color:#b9ccff;
+    border-radius:20px;padding:4px 11px;font-size:12px;margin:0 6px 8px 0}
+  .tc{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .tc .tct{font-weight:600}
+  .tc .tcm{color:var(--muted);font-size:12px;margin-top:2px}
+  .tc .made{color:var(--p4);font-weight:700;font-size:12px}
+  /* breach */
+  .evbar{display:flex;align-items:center;gap:14px;background:linear-gradient(90deg,rgba(255,77,94,.14),rgba(255,77,94,.03));
+    border:1px solid rgba(255,77,94,.45);border-radius:12px;padding:12px 16px;margin-bottom:16px}
+  .evbar .ic{width:34px;height:34px;border-radius:9px;background:var(--p1);color:#0c1020;display:grid;place-items:center;font-weight:800;font-size:18px}
+  .evbar .txt{flex:1}
+  .evbar .txt b{font-size:14px}
+  .evbar .txt div{color:var(--muted);font-size:12px;margin-top:2px}
+  .chainwrap{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
+  @media(max-width:1050px){.chainwrap{grid-template-columns:1fr}}
+  .chain{position:relative}
+  .hop{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:start;
+    background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;
+    opacity:0;transform:translateY(10px);transition:opacity .45s,transform .45s,border-color .45s}
+  .hop.show{opacity:1;transform:none}
+  .hop.warn{border-color:rgba(255,159,67,.5)}
+  .hop.crit{border-color:rgba(255,77,94,.5)}
+  .hop .src{background:transparent;border:0;padding:0;font-size:13px;font-weight:800;color:var(--brand);display:block}
+  .hop.warn .src{color:var(--warn)} .hop.crit .src{color:var(--crit)}
+  .hop .val{font-weight:700;font-size:14px}
+  .hop .why{color:var(--muted);font-size:12px;margin-top:3px}
+  .hop .lbl{font-size:9px;font-weight:800;border-radius:5px;padding:1px 5px;margin-top:6px;display:inline-block}
+  .conn{color:var(--muted)}
+  .arrow{height:16px;display:flex;align-items:center;justify-content:flex-start;padding-left:52px;
+    color:var(--muted);opacity:0;transition:opacity .4s}
+  .arrow.show{opacity:1}
+  .rec{background:linear-gradient(135deg,#2a1119,#1c0d16);border:1.5px solid var(--p1);border-radius:14px;padding:16px;
+    opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s;position:sticky;top:120px}
+  .rec.show{opacity:1;transform:none}
+  .rec .verdict{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800;color:#ffb3ba}
+  .rec .conf{color:var(--muted);font-size:12px;margin:8px 0 14px}
+  .rec .act{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid var(--line);
+    border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  .rec .act .nm{font-weight:700;font-size:13px}
+  .rec .act .st{margin-left:auto;font-size:11px;font-weight:700;color:var(--p4);white-space:nowrap}
+  .rec .act .st.q{color:var(--p2)}
+  .rec .note{color:var(--muted);font-size:11px;margin-top:10px;font-style:italic}
+  .replay{margin-left:auto}
+  .modal{position:fixed;inset:0;background:rgba(6,9,20,.72);display:none;place-items:center;z-index:20}
+  .modal.show{display:grid}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:560px;width:92%;box-shadow:var(--shadow);overflow:hidden}
+  .card .h{padding:14px 18px;background:linear-gradient(90deg,#1c2b52,#181f3c);border-bottom:1px solid var(--line);font-weight:800;color:var(--brand);letter-spacing:.4px}
+  .card .b{padding:16px 18px}
+  .card pre{background:#0c1122;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;font-size:12px;color:#c9d4ee;max-height:300px;white-space:pre-wrap}
+  .card .f{padding:14px 18px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:12px 18px;box-shadow:var(--shadow);z-index:30;opacity:0;transition:opacity .25s,bottom .25s;font-size:13px}
+  .toast.show{opacity:1;bottom:34px}
+  .foot{color:var(--muted);font-size:11px;text-align:center;padding:16px 22px 30px;max-width:1500px;margin:0 auto}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="logo"><span class="mark">L</span> Lyntinel</div>
+  <div class="tagline">AI security agent · orchestration &amp; correlation layer</div>
+  <span class="evpill" id="evpill" onclick="go('breach')">⚡ 1 breach signal</span>
+  <div class="conn" id="conn"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="findings" onclick="go('findings')">▤ Findings &amp; triage</div>
+  <div class="tab" data-tab="threat" onclick="go('threat')">◈ Threat modelling</div>
+  <div class="tab" data-tab="breach" onclick="go('breach')">⚡ Breach analysis <span class="bdg" id="btabbdg" style="display:none">1</span></div>
+</div>
+
+<!-- ===================== FINDINGS ===================== -->
+<div class="view active" id="view-findings">
+  <div class="banner"><div class="b2">
+    <b>Concept demo — every figure on this page is canned data,</b> which is why every source above is tagged <b>SIM</b>. The reasoning shown is a pre-written example of how the agent would explain itself.
+  </div></div>
+  <div class="grid2">
+    <div>
+      <div class="kpis" id="kpis"></div>
+      <div class="panel">
+        <div class="phead"><h2>Risk-prioritised view</h2><small>— sorted by <b>business impact</b>, not raw CVSS. Click a finding.</small></div>
+        <div class="list" id="list"></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="panel">
+        <div class="phead"><h2>Finding intelligence</h2><small>— enrichment · scoring · remediation</small></div>
+        <div class="detail" id="detail"></div>
+      </div>
+      <div class="panel chat">
+        <div class="phead"><h2>Ask Lyntinel</h2><small>— Claude reasoning over the correlated context</small></div>
+        <div class="msgs" id="msgs"></div>
+        <div class="suggest" id="suggest"></div>
+        <div class="inputrow">
+          <input id="chatInput" placeholder="Ask about a finding, correlation, or trend…" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn primary" onclick="sendChat()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== THREAT MODELLING ===================== -->
+<div class="view" id="view-threat">
+  <div class="banner"><div class="b2">
+    <b>Threat-modelling assistant.</b> The agent reads architecture diagrams from <b>Knowledge base</b>, the threat model, and API specifications, then proposes test cases — each filed to <b>Ticketing only on your approval</b>.
+  </div></div>
+  <div style="margin-top:14px">
+    <div class="srccards" id="tmsrc"></div>
+    <div class="panel" style="margin-bottom:16px">
+      <div class="phead"><h2>Trust boundaries</h2><small>— extracted from the architecture &amp; data flows</small></div>
+      <div style="padding:14px 16px" id="tmbounds"></div>
+    </div>
+    <div class="panel">
+      <div class="phead"><h2>Suggested test cases</h2><small>— <span class="ev INFERRED" style="margin:0">INFERRED</span> proposals · approve each to create in Ticketing</small></div>
+      <div id="tmcases"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== BREACH ANALYSIS ===================== -->
+<div class="view" id="view-breach">
+  <div class="evbar">
+    <div class="ic">⚡</div>
+    <div class="txt">
+      <b>Event trigger — AppSec scanner: New Hardcoded Secret detected</b>
+      <div>payments-service · src/config/legacy.js · fired automatically · no human prompt required</div>
+    </div>
+    <button class="btn ghost sm replay" onclick="playBreach()">↻ Replay analysis</button>
+  </div>
+  <div class="banner" style="margin:-4px 0 14px"><div class="b2">
+    On detection, the agent <b>autonomously</b> traces the secret across GitHub, Cloud platform, storage logs and SecOps to answer one question: <b>“Could this become a breach?”</b> — then acts.
+  </div></div>
+  <div class="chainwrap">
+    <div>
+      <div class="phead" style="border:0;padding:0 0 10px"><h2 style="font-size:14px">Attack-path correlation</h2></div>
+      <div class="chain" id="chain"></div>
+    </div>
+    <div><div class="rec" id="rec"></div></div>
+  </div>
+</div>
+
+<div class="foot">
+  Lyntinel concept demo · illustrative data for <b>payments-service</b> (real CVEs, invented business context) ·
+  human-in-the-loop on triage &amp; test cases · autonomous break-glass response on confirmed active compromise · every action logged.
+</div>
+
+<!-- generic approval modal -->
+<div class="modal" id="modal">
+  <div class="card">
+    <div class="h" id="modalh">APPROVAL REQUIRED</div>
+    <div class="b"><p style="margin:0 0 10px;color:var(--muted)" id="modalp"></p><pre id="modalpre"></pre></div>
+    <div class="f"><button class="btn ghost" onclick="decide(false)">Deny</button><button class="btn primary" onclick="decide(true)">Approve</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- sources ---------------- */
+/* This page renders canned data, so every source is tagged SIM. A chip that
+   claimed otherwise would be exactly the false provenance claim the project
+   exists to prevent. */
+const SOURCES = ["AppSec scanner","GitHub","Cloud platform","Knowledge base","EDR",
+  "Email security","Awareness platform","Ticketing","GRC platform"];
+document.getElementById("conn").innerHTML = SOURCES.map(n=>
+  `<span class="src" title="${n}: simulated - canned data in this demo">`
+  + `<span class="dot sim"></span>${n} SIM</span>`).join("");
+
+/* ---------------- tab nav ---------------- */
+let breachPlayed=false;
+function go(tab){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===tab));
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+tab).classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(tab==="breach" && !breachPlayed) playBreach();
+}
+
+/* ---------------- findings data ---------------- */
+const FINDINGS = [
+  { id:"APP-1002", pri:"P1", title:"SQL string concatenation in user lookup", repo:"payments-service",
+    file:"src/db/users.js:88", type:"SAST", tech:"High", biz:"Critical", ev:"CONFIRMED",
+    owasp:"A03 Injection", score:80,
+    q:{internet:true,pii:true,exploit:null,control:true,accepted:false,ticket:null},
+    adj:[["+30","base: High severity","AppSec scanner"],["+20","internet-facing service","asset inventory"],
+         ["+20","handles PII+PCI","asset inventory"],["+10","PCI-DSS / UK-GDPR scope","asset inventory"],
+         ["+15","tier-1 asset","asset inventory"],["-15","WAF compensating control","GRC platform"]],
+    rem:["Use a parameterised query / prepared statement.","Add a regression test proving the injection is closed.",
+         "Review sibling queries in the same module for the same pattern."],
+    reason:"User-controlled input is concatenated into SQL on a tier-1, internet-facing service that processes PII and cardholder data. The WAF lowers but does not remove the risk." },
+  { id:"APP-1004", pri:"P1", title:"Hardcoded cloud storage key (Storage Admin) in commit history",
+    repo:"payments-service", file:"src/config/legacy.js:12", type:"secret", tech:"Critical", biz:"Critical",
+    ev:"CONFIRMED", owasp:"A07 / A05 Misconfiguration", score:105, breach:true,
+    q:{internet:true,pii:true,exploit:null,control:false,accepted:false,ticket:null},
+    adj:[["+40","base: Critical severity","AppSec scanner"],["+20","internet-facing service","asset inventory"],
+         ["+20","handles PII+PCI","asset inventory"],["+10","PCI-DSS / UK-GDPR scope","asset inventory"],
+         ["+15","tier-1 asset","asset inventory"]],
+    rem:["Rotate the exposed cloud key immediately and confirm the old key is revoked.",
+         "Purge it from git history (git filter-repo).","Move to a managed secrets vault; add pre-commit secret scanning."],
+    reason:"An active cloud storage admin key is exposed in git history for a tier-1 service. There is no compensating control for a leaked secret — rotation is the only fix." },
+  { id:"APP-1001", pri:"P1", title:"lodash <4.17.21 prototype pollution (CVE-2021-23337)",
+    repo:"payments-service", file:"package-lock.json", type:"SCA", tech:"Critical", biz:"Critical",
+    ev:"CONFIRMED", owasp:"A06 Vulnerable Components", score:105,
+    q:{internet:true,pii:true,exploit:false,control:false,accepted:false,ticket:null},
+    adj:[["+40","base: Critical severity","AppSec scanner"],["+20","internet-facing service","asset inventory"],
+         ["+20","handles PII+PCI","asset inventory"],["+10","PCI-DSS / UK-GDPR scope","asset inventory"],
+         ["+15","tier-1 asset","asset inventory"]],
+    rem:["Upgrade lodash to >=4.17.21.","Confirm no breaking changes; run the test suite.",
+         "Check reachability of the vulnerable path before rushing a hotfix."],
+    reason:"Critical SCA finding on a tier-1 internet-facing service handling regulated data. No active exploit currently observed (KEV=false)." },
+  { id:"APP-1003", pri:"P4", title:"axios <1.6.0 SSRF (CVE-2023-45857)", repo:"payments-service",
+    file:"package-lock.json", type:"SCA", tech:"Medium", biz:"Low", ev:"INFERRED", owasp:"A10 SSRF", score:10,
+    q:{internet:true,pii:true,exploit:false,control:true,accepted:true,ticket:"SEC-318"},
+    adj:[["+15","base: Medium severity","AppSec scanner"],["+20","internet-facing service","asset inventory"],
+         ["-25","code path not reachable","AppSec scanner reachability"],["+20","handles PII+PCI","asset inventory"],
+         ["+10","PCI-DSS / UK-GDPR scope","asset inventory"],["+15","tier-1 asset","asset inventory"],
+         ["-15","WAF compensating control","GRC platform"],["-30","formally accepted risk","GRC platform"]],
+    rem:["No action required now — upgrade already scheduled in Sprint 24 (tracked by SEC-318)."],
+    reason:"Down-ranked to P4: not reachable, WAF applies, formally accepted (RR-2041), upgrade tracked by SEC-318." },
+];
+
+const counts={P1:0,P2:0,P3:0,P4:0}; FINDINGS.forEach(f=>counts[f.pri]++);
+document.getElementById("kpis").innerHTML=`
+  <div class="kpi"><b style="color:var(--p1)">${counts.P1}</b><span>P1 · act now</span></div>
+  <div class="kpi"><b style="color:var(--p2)">${counts.P2}</b><span>P2</span></div>
+  <div class="kpi"><b style="color:var(--p3)">${counts.P3}</b><span>P3</span></div>
+  <div class="kpi"><b style="color:var(--p4)">${counts.P4}</b><span>P4 · accepted/low</span></div>
+  <div class="kpi"><b>1</b><span>app · payments-service</span></div>`;
+
+document.getElementById("list").innerHTML=FINDINGS.map((f,i)=>`
+  <div class="row" data-i="${i}" onclick="select(${i})">
+    <div class="pri ${f.pri}">${f.pri}</div>
+    <div><div class="rtitle">${f.title}${f.breach?'<span class="newbadge">⚡ NEW</span>':''}</div>
+      <div class="rmeta">${f.repo} · ${f.file} · ${f.type}</div><span class="ev ${f.ev}">${f.ev}</span></div>
+    <div class="sev">tech <b>${f.tech}</b><br>biz <b>${f.biz}</b></div>
+  </div>`).join("");
+
+function yn(v){return v===true?'<span class="yes">Yes</span>':v===false?'<span class="no">No</span>':'<span style="color:var(--muted)">Unknown</span>';}
+function select(i){
+  const f=FINDINGS[i];
+  document.querySelectorAll(".row").forEach(r=>r.classList.toggle("sel",+r.dataset.i===i));
+  let flag="";
+  if(f.breach) flag=`<div class="flag breach" onclick="go('breach')"><span>⚡ AppSec scanner flagged this as a NEW secret — breach analysis triggered automatically.</span><b>View →</b></div>`;
+  else if(f.q.accepted) flag=`<div class="flag">Formally accepted risk — surfaced for awareness, <b>not</b> auto-filed.</div>`;
+  else if(f.q.ticket) flag=`<div class="flag">Already tracked by ${f.q.ticket} — no duplicate will be filed.</div>`;
+  const adj=f.adj.map(a=>{const up=a[0].startsWith("+");
+    return `<div class="adj"><span class="d ${up?'up':'dn'}">${a[0]}</span><span>${a[1]}</span><span class="s">${a[2]}</span></div>`;}).join("");
+  document.getElementById("detail").innerHTML=`
+    <div class="dtitle">${f.title}</div>
+    <div class="dsub">${f.repo} · ${f.file} · OWASP ${f.owasp} · <b>${f.pri}</b> (tech ${f.tech} → business ${f.biz})</div>
+    ${flag}
+    <div class="qa">
+      <div class="q"><div class="k">Internet-facing?</div><div class="v">${yn(f.q.internet)}</div></div>
+      <div class="q"><div class="k">Handles sensitive data?</div><div class="v">${yn(f.q.pii)}</div></div>
+      <div class="q"><div class="k">Active exploit (KEV)?</div><div class="v">${yn(f.q.exploit)}</div></div>
+      <div class="q"><div class="k">Compensating control?</div><div class="v">${yn(f.q.control)}</div></div>
+      <div class="q"><div class="k">Formally accepted?</div><div class="v">${yn(f.q.accepted)}</div></div>
+      <div class="q"><div class="k">Linked ticket?</div><div class="v">${f.q.ticket?f.q.ticket:'<span style="color:var(--muted)">none</span>'}</div></div>
+    </div>
+    <div class="score"><h4>Scoring rationale — business score ${f.score}</h4>${adj}
+      <div class="adj total"><span class="d">=${f.score}</span><span>${f.biz} · ${f.pri}</span></div></div>
+    <div class="rem"><h4>Recommended remediation</h4><ul>${f.rem.map(r=>`<li>${r}</li>`).join("")}</ul></div>
+    <div class="actions">
+      ${(f.q.accepted||f.q.ticket)
+        ? `<button class="btn ghost" disabled style="opacity:.5">Ticket suppressed (${f.q.accepted?'accepted':'duplicate'})</button><span style="color:var(--muted);font-size:12px">Agent chose not to file — by design.</span>`
+        : `<button class="btn primary" onclick="fileTicket(${i})">Draft &amp; file Ticketing ticket</button><span style="color:var(--muted);font-size:12px">WRITE action → needs your approval.</span>`}
+    </div>`;
+}
+
+/* ---------------- generic approval gate ---------------- */
+let onApprove=null;
+function gate({title,prompt,body,approveLabel,onOk}){
+  document.getElementById("modalh").textContent=title;
+  document.getElementById("modalp").textContent=prompt;
+  document.getElementById("modalpre").textContent=body;
+  document.querySelector("#modal .f .primary").textContent=approveLabel||"Approve";
+  onApprove=onOk; document.getElementById("modal").classList.add("show");
+}
+function decide(ok){document.getElementById("modal").classList.remove("show"); if(ok&&onApprove)onApprove();}
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.classList.add("show");
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),3400);}
+
+let ticketSeq=420;
+function fileTicket(i){
+  const f=FINDINGS[i];
+  const body=`[${f.pri}] ${f.title}\nProject: SEC   Component: ${f.repo}\nDescription:\n  ${f.title} in ${f.repo} (${f.file}).\nRisk:\n  ${f.reason}\nRemediation:\n${f.rem.map(r=>"  - "+r).join("\n")}\nOWASP: ${f.owasp}`;
+  gate({title:"⚠ APPROVAL REQUIRED — WRITE (file Ticketing ticket)",prompt:"The agent proposes to file this Ticketing ticket. It will not file without your approval.",
+    body, approveLabel:"Approve & file",
+    onOk:()=>toast(`✓ SEC-${++ticketSeq} filed in Ticketing (simulated). Audit: APPROVED.`)});
+}
+
+/* ---------------- chat ---------------- */
+const CANNED=[
+  {k:["sql","p1","cvss","why"],lbl:"INFERRED",a:"The SQL injection is P1 even though its CVSS is only High because business context outranks the raw score:\n• internet-facing, tier-1 service (+35)\n• PII + cardholder data, PCI-DSS & UK-GDPR scope (+30)\n• WAF reduces exposure (−15) but the query is still user-controlled\nComposite 80 → Critical → P1. Every adjustment is sourced in the finding detail."},
+  {k:["ignore","safe","accept","noise","axios","ssrf"],lbl:"CONFIRMED",a:"Yes — the axios SSRF (CVE-2023-45857) is safe to leave for now:\n• not reachable • WAF applies • accepted in the GRC platform (RR-2041) • already tracked by SEC-318\nDown-ranked to P4 and duplicate ticket suppressed."},
+  {k:["breach","hardcoded","secret","cloud","key"],lbl:"INFERRED",a:"Possibly — and I've already investigated. AppSec scanner's New-Hardcoded-Secret event auto-triggered a breach analysis: the cloud storage admin key is public, still active, and storage logs show recent downloads. See the Breach analysis tab.",go:"breach"},
+  {k:["correlat","secops","endpoint","edr","phish","incident"],lbl:"SIMULATED",a:"Correlating the 08:41 EDR detection on FIN-LAPTOP-042 (j.okafor): Email security shows the same user clicked a phishing URL ~2 min earlier; Awareness platform rates them 'elevated'. Assessment [INFERRED]: high-confidence spearphish → PowerShell on a Finance endpoint. Containment is DESTRUCTIVE and gates for approval."},
+  {k:["trend","week","summary","backlog"],lbl:"SIMULATED",a:"This week: 73 apps scanned, 34 new, 48 remediated — net backlog down 14 (118 open). Most common: outdated libraries, missing auth checks, secrets exposure. Highest backlog: Payments (39 open, 3×P1)."},
+];
+function botMsg(t,lbl){return `<div class="m bot"><div class="who">Lyntinel · Claude</div>${lbl?`<span class="lbl ${lbl}">${lbl}</span>`:''}${t}</div>`;}
+function userMsg(t){return `<div class="m user"><div class="who">You</div>${t}</div>`;}
+const msgsEl=document.getElementById("msgs");
+msgsEl.innerHTML=botMsg("I've triaged 4 AppSec scanner findings for payments-service. 3 are P1; 1 down-ranked and suppressed. One P1 (the hardcoded cloud key) auto-triggered a breach analysis. Ask me anything.","");
+function push(h){msgsEl.insertAdjacentHTML("beforeend",h);msgsEl.scrollTop=msgsEl.scrollHeight;}
+function ask(t){push(userMsg(t));const l=t.toLowerCase();const hit=CANNED.find(c=>c.k.some(k=>l.includes(k)));
+  setTimeout(()=>{push(hit?botMsg(hit.a,hit.lbl):botMsg("This demo has scripted answers for the highlighted questions. In a deployed agent, a model would answer from the correlated context.",""));
+    if(hit&&hit.go)setTimeout(()=>go(hit.go),700);},260);}
+function sendChat(){const i=document.getElementById("chatInput");if(!i.value.trim())return;ask(i.value.trim());i.value="";}
+document.getElementById("suggest").innerHTML=["Why is the SQL finding P1, not just High?","Anything I can safely ignore?",
+  "Could this hardcoded key become a breach?","Correlate our SecOps alerts"].map(s=>`<span class="chip" onclick="ask('${s.replace(/'/g,"\\'")}')">${s}</span>`).join("");
+
+/* ---------------- threat modelling ---------------- */
+const TM_SOURCES=[["Knowledge base","◈","Architecture diagram: Portal, Identity Service, payments-service, Database + data flows"],
+  ["Threat model","▤","STRIDE model for payments-service (spoofing, tampering, disclosure, EoP)"],
+  ["API spec","{ }","OpenAPI: /auth/login, /auth/impersonate, /payments"]];
+document.getElementById("tmsrc").innerHTML=TM_SOURCES.map(s=>
+  `<div class="srccard"><div class="t"><span style="color:var(--brand)">${s[1]}</span> ${s[0]}</div><div class="d">${s[2]}</div></div>`).join("");
+document.getElementById("tmbounds").innerHTML=["Portal → Identity Service","Portal → payments-service",
+  "payments-service → Database (PII)","Admin → /auth/impersonate (privileged)"].map(b=>`<span class="bound">${b}</span>`).join("");
+
+const TESTCASES=[
+  {t:"JWT manipulation — modify claims, strip signature (alg=none)",b:"Portal → Identity Service",made:false},
+  {t:"Token replay after logout / expiry",b:"Portal → Identity Service",made:false},
+  {t:"Impersonation abuse — call /auth/impersonate as a non-admin",b:"Admin → Identity Service",made:false},
+  {t:"IDOR — impersonate another user by manipulating the id",b:"Admin → Identity Service",made:false},
+  {t:"Brute force — no rate limiting on /auth/login",b:"Portal → Identity Service",made:false},
+  {t:"Cross-tenant / IDOR access to records containing PII",b:"payments-service → Database",made:false},
+];
+let tcSeq=900;
+function renderTC(){
+  document.getElementById("tmcases").innerHTML=TESTCASES.map((c,i)=>`
+    <div class="tc"><div><div class="tct">${c.t}</div><div class="tcm">trust boundary: ${c.b}</div></div>
+      ${c.made?`<span class="made">✓ ${c.key} created</span>`
+        :`<button class="btn ghost sm" onclick="createTC(${i})">Create in Ticketing</button>`}</div>`).join("");
+}
+function createTC(i){
+  const c=TESTCASES[i];
+  const body=`[Test case] ${c.t}\nProject: SEC   Type: Security test\nTrust boundary: ${c.b}\nSource: Knowledge base architecture + threat model\nExpected: documented, executed during the next penetration test.`;
+  gate({title:"APPROVAL REQUIRED — WRITE (create test case in Ticketing)",prompt:"The agent proposes to create this test case in Ticketing. Approve to create it.",
+    body, approveLabel:"Approve & create",
+    onOk:()=>{c.made=true;c.key="TEST-"+(++tcSeq);renderTC();toast(`✓ ${c.key} created in Ticketing (simulated). Audit: APPROVED.`);}});
+}
+renderTC();
+
+/* ---------------- breach analysis ---------------- */
+const HOPS=[
+  {s:"AppSec scanner",v:"Hardcoded secret detected",w:"Secret scanner flagged an active key committed to source (payments-service).",lbl:"CONFIRMED",lvl:"warn"},
+  {s:"GitHub",v:"Repository is public",w:"The repo is internet-public — the key is exposed to anyone who found it.",lbl:"CONFIRMED",lvl:"crit"},
+  {s:"Commit history",v:"Exposed ~18 months",w:"The secret has been public for ~18 months — a long window for discovery.",lbl:"CONFIRMED",lvl:"crit"},
+  {s:"Cloud platform",v:"Key still active",w:"The credential has not been rotated — it still authenticates successfully.",lbl:"CONFIRMED",lvl:"crit"},
+  {s:"Cloud IAM",v:"Scope: Storage Admin",w:"The key grants full control over storage — very large blast radius.",lbl:"CONFIRMED",lvl:"crit"},
+  {s:"Storage logs",v:"Recent download activity",w:"Unusual recent reads/downloads on that storage — possible data exfiltration.",lbl:"INFERRED",lvl:"crit"},
+  {s:"EDR",v:"Owning developer's laptop flagged",w:"EDR shows suspicious activity on the key owner's device — a possible foothold.",lbl:"SIMULATED",lvl:"crit"},
+  {s:"Email security",v:"Developer received a phishing email",w:"The same developer was recently phished — a plausible initial-access path.",lbl:"SIMULATED",lvl:"crit"},
+];
+const REC={verdict:"High-confidence active compromise",
+  conf:"Correlated across 8 signals (AppSec → cloud → SecOps), joined on repo, key id and the owning developer's identity. This is treated as a confirmed active-key compromise, so the agent runs a break-glass response automatically — every action is logged.",
+  actions:[["Open P1 incident","SEC-451 opened"],["Rotate the exposed cloud key","rotation initiated"],
+    ["Audit storage access logs","audit running"],["Notify security / page on-call","on-call notified"]]};
+
+function playBreach(){
+  breachPlayed=true;
+  document.getElementById("evpill").classList.remove("on");
+  document.getElementById("btabbdg").style.display="none";
+  const chain=document.getElementById("chain");
+  chain.innerHTML=HOPS.map((h,i)=>`
+    ${i>0?`<div class="arrow" data-a="${i}">↓</div>`:''}
+    <div class="hop ${h.lvl}" data-h="${i}">
+      <div><span class="src">${h.s}</span></div>
+      <div><div class="val">${h.v}</div><div class="why">${h.w}</div><span class="lbl ${h.lbl}">${h.lbl}</span></div>
+    </div>`).join("");
+  const rec=document.getElementById("rec");
+  rec.classList.remove("show");
+  rec.innerHTML=`
+    <div class="verdict">⚠ ${REC.verdict}</div>
+    <div class="conf">${REC.conf}</div>
+    ${REC.actions.map(a=>`<div class="act"><span class="nm">${a[0]}</span><span class="st ${a[1].includes('running')||a[1].includes('initiated')?'q':''}">${a[1]}</span></div>`).join("")}
+    <div class="note">Autonomous break-glass response — no approval prompt, because the compromise is confirmed and time-critical. Configurable per severity.</div>`;
+  // staggered reveal
+  const hops=chain.querySelectorAll(".hop"), arrows=chain.querySelectorAll(".arrow");
+  hops.forEach(h=>h.classList.remove("show")); arrows.forEach(a=>a.classList.remove("show"));
+  let d=150;
+  hops.forEach((h,i)=>{ setTimeout(()=>{ if(i>0)arrows[i-1]&&arrows[i-1].classList.add("show"); h.classList.add("show");
+    document.getElementById("view-breach").scrollIntoView; }, d); d+=520; });
+  setTimeout(()=>rec.classList.add("show"), d+150);
+}
+
+/* ---------------- event: AppSec scanner fires on load ---------------- */
+function fireEvent(){
+  document.getElementById("evpill").classList.add("on");
+  document.getElementById("btabbdg").style.display="inline-block";
+  toast("⚡ Lyntinel event: New Hardcoded Secret detected on payments-service — breach analysis ready.");
+}
+
+select(0);
+setTimeout(fireEvent, 900);
+</script>
+</body>
+</html>

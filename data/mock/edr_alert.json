@@ -1,0 +1,22 @@
+{
+  "_SIMULATED": "Mock EDR detection for the correlation scenario. Not real data.",
+  "detection_id": "det:a1b2c3d4e5f6:9988776655",
+  "severity": 70,
+  "severity_label": "High",
+  "tactic": "Initial Access",
+  "technique": "Phishing: Spearphishing Link",
+  "technique_id": "T1566.002",
+  "device": {
+    "hostname": "FIN-LAPTOP-042",
+    "user": "j.okafor",
+    "os": "Windows 11",
+    "department": "Finance"
+  },
+  "process": {
+    "filename": "outlook.exe",
+    "spawned": "powershell.exe",
+    "cmdline": "powershell -enc aQB3AHIAIAAtAFUAcgBpACAAaAB0AHQAcAA6AC8ALwAxADkAMgA..."
+  },
+  "timestamp": "2026-06-27T08:41:13Z",
+  "status": "new"
+}
