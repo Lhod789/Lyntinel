@@ -57,7 +57,6 @@ so in the PR — do not skip it silently.
 
 - Integrations are named by category (AppSec scanner, EDR, ticketing…), never by
   vendor — and that includes vendor-specific endpoint paths and field names.
-  `tests/test_conventions.py` enforces this.
 
 ## Repo map
 

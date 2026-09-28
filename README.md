@@ -182,14 +182,14 @@ Then open <http://localhost:8931/dashboard.html>
 python3 -m unittest discover -s tests -t .
 ```
 
-There are 97 tests, all standard library and fully offline. They test the project's **claims** rather than chasing line coverage:
+There are 94 tests, all standard library and fully offline. They test the project's **claims** rather than chasing line coverage:
 
 - No WRITE or DESTRUCTIVE action runs without an explicit yes.
 - An unanswerable question stays `UNKNOWN` instead of becoming a convenient default.
 - Business context can outrank raw CVSS.
 - Simulated data always says so: in the terminal output, in the mock files and on the dashboard.
 - The connectors cannot reach the network, so the demo stays offline.
-- The repo stays clean: no committed credentials, and every integration is named by category, never by vendor.
+- The repo stays clean: no credentials are committed.
 
 ---
 
@@ -224,5 +224,5 @@ lyntinel/
   data/mock/       labelled mock data for every source
   docs/            limitations, screenshots
   dashboard/       dashboard.html (concept demo)
-  tests/           97 tests, standard library only
+  tests/           94 tests, standard library only
 ```
